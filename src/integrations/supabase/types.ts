@@ -9,7 +9,128 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      events: {
+        Row: {
+          address: string
+          attendees: number
+          capacity: number
+          category: string
+          created_at: string | null
+          date: string
+          description: string
+          host_name: string
+          host_verified: boolean
+          id: string
+          image_url: string | null
+          latitude: number
+          location_name: string
+          longitude: number
+          short_description: string
+          title: string
+          university: string | null
+        }
+        Insert: {
+          address: string
+          attendees?: number
+          capacity: number
+          category: string
+          created_at?: string | null
+          date: string
+          description: string
+          host_name: string
+          host_verified?: boolean
+          id?: string
+          image_url?: string | null
+          latitude: number
+          location_name: string
+          longitude: number
+          short_description: string
+          title: string
+          university?: string | null
+        }
+        Update: {
+          address?: string
+          attendees?: number
+          capacity?: number
+          category?: string
+          created_at?: string | null
+          date?: string
+          description?: string
+          host_name?: string
+          host_verified?: boolean
+          id?: string
+          image_url?: string | null
+          latitude?: number
+          location_name?: string
+          longitude?: number
+          short_description?: string
+          title?: string
+          university?: string | null
+        }
+        Relationships: []
+      }
+      rsvps: {
+        Row: {
+          created_at: string | null
+          email: string
+          event_id: string
+          id: string
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          event_id: string
+          id?: string
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          event_id?: string
+          id?: string
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      universities: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
