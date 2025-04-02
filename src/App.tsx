@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import EventChat from "./pages/EventChat";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -22,16 +23,14 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            {/* Protected routes example: 
             <Route 
-              path="/create-event" 
+              path="/event/:eventId/chat" 
               element={
-                <ProtectedRoute>
-                  <CreateEvent />
+                <ProtectedRoute requireEmailConfirmation={true}>
+                  <EventChat />
                 </ProtectedRoute>
               } 
             />
-            */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

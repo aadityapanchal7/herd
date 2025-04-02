@@ -1,16 +1,20 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navigate } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [isLoading, setIsLoading] = useState(false);
+  const [universities, setUniversities] = useState<{id: string, name: string}[]>([]);
+  const [signupCount, setSignupCount] = useState<number>(0);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -22,10 +26,57 @@ const Auth = () => {
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
+  const [campus, setCampus] = useState('');
 
   // Error states
   const [loginError, setLoginError] = useState('');
   const [signupError, setSignupError] = useState('');
+
+  // Fetch universities and signup count on component mount
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      const { data, error } = await supabase
+        .from('universities')
+        .select('id, name')
+        .order('name');
+      
+      if (error) {
+        console.error('Error fetching universities:', error);
+      } else {
+        setUniversities(data || []);
+      }
+    };
+
+    const fetchSignupCount = async () => {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      
+      if (error) {
+        console.error('Error fetching signup count:', error);
+      } else {
+        setSignupCount(count || 0);
+      }
+    };
+
+    fetchUniversities();
+    fetchSignupCount();
+
+    // Subscribe to real-time updates for profiles
+    const channel = supabase
+      .channel('public:profiles')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'profiles' }, 
+        () => {
+          setSignupCount(prevCount => prevCount + 1);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // If user is already logged in, redirect to home
   if (user) {
@@ -60,6 +111,11 @@ const Auth = () => {
       return;
     }
 
+    if (!campus) {
+      setSignupError('Please select your campus');
+      return;
+    }
+
     if (signupPassword !== signupConfirmPassword) {
       setSignupError('Passwords do not match');
       return;
@@ -75,6 +131,7 @@ const Auth = () => {
       await signUp(signupEmail, signupPassword, {
         full_name: fullName,
         username: username,
+        campus_id: campus,
       });
       setActiveTab('login');
     } catch (error: any) {
@@ -96,6 +153,11 @@ const Auth = () => {
           <CardDescription className="text-center">
             Connect with campus events
           </CardDescription>
+          <div className="flex justify-center">
+            <div className="bg-herd-purple/10 text-herd-purple font-semibold px-4 py-2 rounded-full text-sm">
+              {signupCount} users have joined
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Tabs 
@@ -171,6 +233,20 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Select value={campus} onValueChange={setCampus}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your campus" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {universities.map((uni) => (
+                        <SelectItem key={uni.id} value={uni.id}>
+                          {uni.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Input
                     id="signup-password"
                     type="password"
@@ -204,7 +280,7 @@ const Auth = () => {
         </CardContent>
         <CardFooter>
           <p className="text-center text-sm text-gray-500 mt-2 w-full">
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+            By continuing, you agree to our Terms of Service and Privacy Policy. You'll receive email confirmations for events.
           </p>
         </CardFooter>
       </Card>

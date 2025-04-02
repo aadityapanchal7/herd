@@ -1,159 +1,112 @@
-import React, { useState } from 'react';
-import { Event } from '../types';
-import { Calendar, Clock, MapPin, Users } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
+import React from 'react';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { CalendarClock, MapPin, User, MessageCircle } from 'lucide-react';
+import { Event } from '@/types';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 interface EventCardProps {
   event: Event;
-  onRSVP?: (eventId: string) => void;
+  onRSVP: (eventId: string) => void;
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event, onRSVP }) => {
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Format date for display
+  const formattedDate = new Date(event.date).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short', 
+    day: 'numeric'
+  });
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
-    });
+  // Format time for display
+  const formattedTime = new Date(event.date).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  // Get category color
+  const getCategoryColor = () => {
+    switch(event.category) {
+      case 'social': return 'bg-herd-category-social';
+      case 'academic': return 'bg-herd-category-academic';
+      case 'sports': return 'bg-herd-category-sports';
+      case 'arts': return 'bg-herd-category-arts';
+      default: return 'bg-herd-category-other';
+    }
   };
 
-  const capacityPercentage = (event.attendees / event.capacity) * 100;
-  let capacityColor = 'bg-green-500';
-  
-  if (capacityPercentage >= 90) {
-    capacityColor = 'bg-red-500';
-  } else if (capacityPercentage >= 60) {
-    capacityColor = 'bg-yellow-500';
-  }
+  const handleChatClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (user) {
+      navigate(`/event/${event.id}/chat`);
+    } else {
+      navigate('/auth');
+    }
+  };
 
   return (
-    <>
-      <Card 
-        className="overflow-hidden transition-all hover:shadow-md hover:-translate-y-1 h-full flex flex-col cursor-pointer"
-        onClick={() => setIsDetailOpen(true)}
-      >
-        <div className="relative h-48 overflow-hidden">
-          <div className="absolute top-3 right-3 z-10">
-            <Badge className={`bg-herd-category-${event.category} hover:bg-herd-category-${event.category}/90`}>
-              {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
-            </Badge>
-          </div>
-          {event.image ? (
+    <Card className="overflow-hidden group hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="p-0">
+        <div className="relative h-32 md:h-48 bg-gray-200 overflow-hidden">
+          {event.image_url ? (
             <img 
-              src={event.image} 
+              src={event.image_url} 
               alt={event.title} 
-              className="w-full h-48 object-cover transition-transform hover:scale-105"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className={`w-full h-48 flex items-center justify-center bg-herd-category-${event.category}/20`}>
-              <span className="text-2xl font-bold text-herd-category-${event.category}">
-                {event.title.charAt(0)}
-              </span>
+            <div className="flex items-center justify-center h-full bg-gradient-to-r from-herd-purple-light to-herd-purple">
+              <span className="text-white text-xl font-bold">{event.title.charAt(0)}</span>
             </div>
           )}
+          <div className={`absolute top-2 right-2 ${getCategoryColor()} text-white px-2 py-1 rounded-full text-xs font-medium`}>
+            {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
+          </div>
         </div>
+      </CardHeader>
+      <CardContent className="pt-4">
+        <h3 className="font-bold text-lg mb-2 line-clamp-2">{event.title}</h3>
+        <p className="text-herd-text-secondary text-sm mb-4 line-clamp-2">{event.description}</p>
         
-        <CardContent className="flex-grow p-4">
-          <h3 className="text-xl font-semibold mb-2 line-clamp-1">{event.title}</h3>
-          
-          <div className="flex items-center text-sm text-herd-text-secondary mb-2">
-            <Calendar className="h-4 w-4 mr-1" />
-            <span>{formatDate(event.date)}</span>
-            <span className="mx-1">•</span>
-            <Clock className="h-4 w-4 mr-1" />
-            <span>{event.time}</span>
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center text-herd-text-secondary">
+            <CalendarClock size={16} className="mr-2" />
+            <span>{formattedDate} • {formattedTime}</span>
           </div>
-          
-          <div className="flex items-start text-sm text-herd-text-secondary mb-3">
-            <MapPin className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
-            <span className="line-clamp-1">{event.location.name}</span>
+          <div className="flex items-center text-herd-text-secondary">
+            <MapPin size={16} className="mr-2" />
+            <span className="truncate">{event.location_name}</span>
           </div>
-          
-          <p className="text-sm text-herd-text-secondary line-clamp-2 mb-3">
-            {event.description}
-          </p>
-          
-          <div className="flex items-center text-sm">
-            <Users className="h-4 w-4 mr-1" />
-            <span className="text-herd-text-secondary">{event.attendees}/{event.capacity} attending</span>
+          <div className="flex items-center text-herd-text-secondary">
+            <User size={16} className="mr-2" />
+            <span>{event.attendees} / {event.capacity} attending</span>
           </div>
-          
-          <div className="w-full h-1 bg-gray-200 rounded-full mt-2 overflow-hidden">
-            <div 
-              className={`h-full ${capacityColor} rounded-full`} 
-              style={{ width: `${capacityPercentage}%` }}
-            ></div>
-          </div>
-        </CardContent>
-        
-        <CardFooter className="p-4 pt-0">
-          <Button 
-            className="w-full bg-herd-purple hover:bg-herd-purple-dark"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRSVP && onRSVP(event.id);
-            }}
-          >
-            Join Event
-          </Button>
-        </CardFooter>
-      </Card>
-
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{event.title}</DialogTitle>
-          </DialogHeader>
-          <div className="grid md:grid-cols-2 gap-6">
-            {event.image && (
-              <img 
-                src={event.image} 
-                alt={event.title} 
-                className="w-full h-64 object-cover rounded-lg"
-              />
-            )}
-            <div>
-              <DialogDescription>
-                <div className="space-y-4">
-                  <div className="flex items-center text-sm">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>{formatDate(event.date)}</span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <Clock className="h-4 w-4 mr-2" />
-                    <span>{event.time}</span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    <span>{event.location.name}</span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <Users className="h-4 w-4 mr-2" />
-                    <span>{event.attendees}/{event.capacity} attending</span>
-                  </div>
-                  <Badge className={`bg-herd-category-${event.category}`}>
-                    {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
-                  </Badge>
-                </div>
-                <p className="mt-4 text-herd-text-secondary">{event.description}</p>
-              </DialogDescription>
-              <Button 
-                className="mt-4 w-full bg-herd-purple hover:bg-herd-purple-dark"
-                onClick={() => onRSVP && onRSVP(event.id)}
-              >
-                RSVP to Event
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </CardContent>
+      <CardFooter className="flex gap-2">
+        <Button 
+          variant="default" 
+          className="flex-1 bg-herd-purple hover:bg-herd-purple-dark"
+          onClick={() => onRSVP(event.id)}
+        >
+          RSVP
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1 border-herd-purple text-herd-purple hover:bg-herd-purple/10"
+          onClick={handleChatClick}
+        >
+          <MessageCircle size={16} className="mr-2" />
+          Chat
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 
