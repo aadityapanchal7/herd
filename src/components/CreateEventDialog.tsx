@@ -99,10 +99,10 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = ({ isOpen, onClose }
         location_name: data.location_name,
         address: data.address,
         category: data.category,
-        capacity: data.capacity,
+        capacity: Number(data.capacity),
         image_url: data.image_url || null,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        latitude: Number(data.latitude),
+        longitude: Number(data.longitude),
         host_name: user.email?.split('@')[0] || 'Anonymous Host',
         host_verified: true,
         attendees: 0
