@@ -8,6 +8,7 @@ import { events } from '../data/events';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchFilters as SearchFiltersType, Event, EventCategory } from '../types';
 import { toast } from 'sonner';
+import RSVPDialog from '@/components/RSVPDialog';
 
 const universities = [
   { name: 'UT Austin', longitude: -97.7372, latitude: 30.2849, description: 'University of Texas at Austin' },
@@ -24,12 +25,15 @@ const Index = () => {
     category: 'all',
     date: 'all',
   });
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isRSVPDialogOpen, setIsRSVPDialogOpen] = useState(false);
 
   const handleRSVP = (eventId: string) => {
-    // Placeholder RSVP functionality
-    toast.success('RSVP Successful!', {
-      description: 'You have been added to the event attendee list.'
-    });
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
+      setIsRSVPDialogOpen(true);
+    }
   };
 
   // Filter events based on search filters
@@ -155,6 +159,12 @@ const Index = () => {
           </Tabs>
         </section>
       </main>
+      
+      <RSVPDialog 
+        event={selectedEvent} 
+        isOpen={isRSVPDialogOpen} 
+        onClose={() => setIsRSVPDialogOpen(false)} 
+      />
     </div>
   );
 };
