@@ -54,27 +54,44 @@ const ChatRoom: React.FC = () => {
   
   const fetchMessages = async () => {
     try {
-      const { data, error } = await supabase
+      // First get all messages for this event
+      const { data: messagesData, error: messagesError } = await supabase
         .from('event_chat_messages')
-        .select(`
-          id,
-          message,
-          user_id,
-          created_at,
-          profiles:user_id (username, full_name)
-        `)
+        .select('id, message, user_id, created_at')
         .eq('event_id', eventId)
         .order('created_at', { ascending: true });
         
-      if (error) throw error;
+      if (messagesError) throw messagesError;
       
-      const formattedMessages = data.map(msg => ({
-        id: msg.id,
-        message: msg.message,
-        user_id: msg.user_id,
-        username: msg.profiles?.username || msg.profiles?.full_name || 'Anonymous',
-        created_at: msg.created_at
-      }));
+      // Then for each message, get the user profile data
+      const formattedMessages: Message[] = [];
+      
+      for (const msg of messagesData || []) {
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('username, full_name')
+          .eq('id', msg.user_id)
+          .single();
+          
+        if (!userError) {
+          formattedMessages.push({
+            id: msg.id,
+            message: msg.message,
+            user_id: msg.user_id,
+            username: userData?.username || userData?.full_name || 'Anonymous',
+            created_at: msg.created_at
+          });
+        } else {
+          // If there's an error getting user info, still show the message
+          formattedMessages.push({
+            id: msg.id,
+            message: msg.message,
+            user_id: msg.user_id,
+            username: 'Anonymous',
+            created_at: msg.created_at
+          });
+        }
+      }
       
       setMessages(formattedMessages);
     } catch (error) {
