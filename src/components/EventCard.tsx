@@ -1,112 +1,118 @@
 
 import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CalendarClock, MapPin, User, MessageCircle } from 'lucide-react';
 import { Event } from '@/types';
-import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar, MapPin, Users, CheckCircle, MessageCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import RSVPDialog from './RSVPDialog';
 
 interface EventCardProps {
   event: Event;
-  onRSVP: (eventId: string) => void;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, onRSVP }) => {
-  const { user } = useAuth();
+const EventCard: React.FC<EventCardProps> = ({ event }) => {
+  const [showRSVPDialog, setShowRSVPDialog] = React.useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   
-  // Format date for display
-  const formattedDate = new Date(event.date).toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short', 
-    day: 'numeric'
-  });
-
-  // Format time for display
-  const formattedTime = new Date(event.date).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
-
-  // Get category color
-  const getCategoryColor = () => {
-    switch(event.category) {
-      case 'social': return 'bg-herd-category-social';
-      case 'academic': return 'bg-herd-category-academic';
-      case 'sports': return 'bg-herd-category-sports';
-      case 'arts': return 'bg-herd-category-arts';
-      default: return 'bg-herd-category-other';
+  const getCategoryColor = (category: string) => {
+    switch(category) {
+      case 'social': return 'bg-blue-100 text-blue-800';
+      case 'academic': return 'bg-green-100 text-green-800';
+      case 'sports': return 'bg-red-100 text-red-800';
+      case 'arts': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
-
-  const handleChatClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (user) {
-      navigate(`/event/${event.id}/chat`);
-    } else {
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+  
+  const openRSVPDialog = () => {
+    if (!user) {
       navigate('/auth');
+      return;
     }
+    setShowRSVPDialog(true);
+  };
+  
+  const closeRSVPDialog = () => {
+    setShowRSVPDialog(false);
+  };
+  
+  const handleChatClick = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    navigate(`/chat/${event.id}`);
   };
 
   return (
-    <Card className="overflow-hidden group hover:shadow-md transition-shadow duration-300">
-      <CardHeader className="p-0">
-        <div className="relative h-32 md:h-48 bg-gray-200 overflow-hidden">
-          {event.image_url ? (
-            <img 
-              src={event.image_url} 
-              alt={event.title} 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full bg-gradient-to-r from-herd-purple-light to-herd-purple">
-              <span className="text-white text-xl font-bold">{event.title.charAt(0)}</span>
+    <>
+      <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <Badge className={`${getCategoryColor(event.category)}`}>
+              {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
+            </Badge>
+            {event.host.verified && (
+              <Badge variant="outline" className="flex gap-1 text-blue-600 border-blue-200">
+                <CheckCircle className="h-3 w-3" />
+                <span>Verified Host</span>
+              </Badge>
+            )}
+          </div>
+          <CardTitle className="text-lg font-bold mt-2">{event.title}</CardTitle>
+          <CardDescription className="line-clamp-2">{event.description}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-grow">
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center text-gray-500">
+              <Calendar className="h-4 w-4 mr-2" />
+              <span>{formatDate(event.date)}{event.time ? ` • ${event.time}` : ''}</span>
             </div>
-          )}
-          <div className={`absolute top-2 right-2 ${getCategoryColor()} text-white px-2 py-1 rounded-full text-xs font-medium`}>
-            {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
+            <div className="flex items-center text-gray-500">
+              <MapPin className="h-4 w-4 mr-2" />
+              <span className="truncate">{event.location_name}</span>
+            </div>
+            <div className="flex items-center text-gray-500">
+              <Users className="h-4 w-4 mr-2" />
+              <span>{event.attendees} / {event.capacity} attendees</span>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-4">
-        <h3 className="font-bold text-lg mb-2 line-clamp-2">{event.title}</h3>
-        <p className="text-herd-text-secondary text-sm mb-4 line-clamp-2">{event.description}</p>
-        
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center text-herd-text-secondary">
-            <CalendarClock size={16} className="mr-2" />
-            <span>{formattedDate} • {formattedTime}</span>
-          </div>
-          <div className="flex items-center text-herd-text-secondary">
-            <MapPin size={16} className="mr-2" />
-            <span className="truncate">{event.location_name}</span>
-          </div>
-          <div className="flex items-center text-herd-text-secondary">
-            <User size={16} className="mr-2" />
-            <span>{event.attendees} / {event.capacity} attending</span>
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex gap-2">
-        <Button 
-          variant="default" 
-          className="flex-1 bg-herd-purple hover:bg-herd-purple-dark"
-          onClick={() => onRSVP(event.id)}
-        >
-          RSVP
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 border-herd-purple text-herd-purple hover:bg-herd-purple/10"
-          onClick={handleChatClick}
-        >
-          <MessageCircle size={16} className="mr-2" />
-          Chat
-        </Button>
-      </CardFooter>
-    </Card>
+        </CardContent>
+        <CardFooter className="pt-2 flex justify-between">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-herd-purple border-herd-purple/30 hover:bg-herd-purple/10"
+            onClick={handleChatClick}
+          >
+            <MessageCircle className="mr-1 h-4 w-4" /> Chat
+          </Button>
+          <Button 
+            size="sm"
+            className="bg-herd-purple hover:bg-herd-purple-dark"
+            onClick={openRSVPDialog}
+            disabled={event.attendees >= event.capacity}
+          >
+            {event.attendees >= event.capacity ? 'Event Full' : 'RSVP'}
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      <RSVPDialog
+        event={event}
+        isOpen={showRSVPDialog}
+        onClose={closeRSVPDialog}
+      />
+    </>
   );
 };
 

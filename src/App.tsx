@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import EventChat from "./pages/EventChat";
+import Chat from "./pages/Chat";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -28,6 +29,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireEmailConfirmation={true}>
                   <EventChat />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/chat/:eventId" 
+              element={
+                <ProtectedRoute requireEmailConfirmation={true}>
+                  <Chat />
                 </ProtectedRoute>
               } 
             />

@@ -53,15 +53,35 @@ const RSVPDialog: React.FC<RSVPDialogProps> = ({ event, isOpen, onClose }) => {
       
       // Send confirmation email
       if (user.email) {
-        await supabase.functions.invoke('send-event-email', {
-          body: {
-            email: user.email,
-            name: user.email?.split('@')[0] || '',
-            eventTitle: event.title,
-            eventDate: event.date,
-            eventLocation: event.location_name
-          }
-        });
+        try {
+          await supabase.functions.invoke('send-event-email', {
+            body: {
+              email: user.email,
+              name: user.email?.split('@')[0] || '',
+              eventTitle: event.title,
+              eventDate: event.date,
+              eventLocation: event.location_name
+            }
+          });
+          
+          // Send a second verification email for RSVP
+          await supabase.functions.invoke('send-rsvp-verification', {
+            body: {
+              email: user.email,
+              name: user.email?.split('@')[0] || '',
+              eventTitle: event.title,
+              eventDate: event.date,
+              eventLocation: event.location_name
+            }
+          });
+          
+          toast.success('RSVP Verification Email Sent', {
+            description: 'Please check your email for verification instructions.'
+          });
+        } catch (emailError) {
+          console.error('Error sending email:', emailError);
+          // We don't throw here to still complete the RSVP process
+        }
       }
       
       toast.success('RSVP Successful!', {
@@ -100,8 +120,8 @@ const RSVPDialog: React.FC<RSVPDialogProps> = ({ event, isOpen, onClose }) => {
           </p>
           <p className="text-sm text-muted-foreground mt-4">
             {user?.email ? 
-              `A confirmation email will be sent to ${user.email}` : 
-              'Sign in to receive a confirmation email'}
+              `A confirmation email and verification will be sent to ${user.email}` : 
+              'Sign in to receive confirmation emails'}
           </p>
         </div>
         
