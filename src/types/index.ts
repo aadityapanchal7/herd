@@ -12,6 +12,7 @@ export interface Event {
     address: string;
     coordinates: [number, number]; // [longitude, latitude]
   };
+  location_name: string; // Added this property
   category: EventCategory;
   attendees: number;
   capacity: number;
@@ -19,11 +20,25 @@ export interface Event {
     name: string;
     verified: boolean;
   };
-  image?: string;
+  image_url?: string; // Added this property
+  image?: string; // Keeping original property
 }
 
 export interface SearchFilters {
   query: string;
   category: EventCategory | 'all';
   date: 'today' | 'tomorrow' | 'this-week' | 'this-month' | 'all';
+}
+
+export interface ChatMessage {
+  id: string;
+  user_id: string;
+  event_id: string;
+  message: string;
+  created_at: string;
+  profile: {
+    username: string;
+    full_name: string;
+    avatar_url: string | null;
+  }
 }

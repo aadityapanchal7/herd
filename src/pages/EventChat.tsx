@@ -8,19 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-
-interface ChatMessage {
-  id: string;
-  user_id: string;
-  event_id: string;
-  message: string;
-  created_at: string;
-  profile: {
-    username: string;
-    full_name: string;
-    avatar_url: string | null;
-  }
-}
+import { ChatMessage } from '@/types';
 
 interface Event {
   id: string;
@@ -76,7 +64,7 @@ const EventChat = () => {
           .order('created_at', { ascending: true });
         
         if (messagesError) throw messagesError;
-        setMessages(messagesData || []);
+        setMessages(messagesData as ChatMessage[] || []);
         
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -117,7 +105,7 @@ const EventChat = () => {
             return;
           }
           
-          setMessages(prev => [...prev, data]);
+          setMessages(prev => [...prev, data as ChatMessage]);
         };
         
         fetchNewMessage();
