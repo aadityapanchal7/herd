@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,6 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [universities, setUniversities] = useState<{id: string, name: string}[]>([]);
   const [userCount, setUserCount] = useState<number>(0);
-  const [loginCount, setLoginCount] = useState<number>(0);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -50,26 +48,20 @@ const Auth = () => {
       }
     };
 
-    const fetchUserAndLoginCount = async () => {
-      // Get the total number of users
-      const { count: userCount, error: userCountError } = await supabase
+    const fetchUserCount = async () => {
+      const { count, error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
       
-      if (userCountError) {
-        console.error('Error fetching user count:', userCountError);
+      if (error) {
+        console.error('Error fetching user count:', error);
       } else {
-        setUserCount(userCount || 0);
+        setUserCount(count || 0);
       }
-
-      // Get a count of logins from the auth logs if available
-      // This is just a placeholder since we don't have direct access to login counts
-      // In a real application, you might track this in a separate table
-      setLoginCount(Math.floor(Math.random() * 50) + userCount); // Just a simulated value
     };
 
     fetchUniversities();
-    fetchUserAndLoginCount();
+    fetchUserCount();
 
     // Subscribe to real-time updates for profiles
     const channel = supabase
@@ -104,7 +96,6 @@ const Auth = () => {
     setIsLoading(true);
     try {
       await signIn(loginEmail, loginPassword);
-      // When a user logs in, we could increment a counter in a real app
     } catch (error: any) {
       console.error('Login error:', error);
     } finally {
@@ -166,9 +157,6 @@ const Auth = () => {
           <div className="flex justify-center gap-2">
             <div className="bg-herd-purple/10 text-herd-purple font-semibold px-4 py-2 rounded-full text-sm">
               {userCount} users have joined
-            </div>
-            <div className="bg-herd-purple/10 text-herd-purple font-semibold px-4 py-2 rounded-full text-sm">
-              {loginCount} logins
             </div>
           </div>
         </CardHeader>
