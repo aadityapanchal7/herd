@@ -19,8 +19,7 @@ const EventList: React.FC<EventListProps> = ({ events, title, onRSVP }) => {
         {events.map((event) => (
           <EventCard 
             key={event.id} 
-            event={event} 
-            onRSVP={onRSVP}
+            event={event}
           />
         ))}
       </div>

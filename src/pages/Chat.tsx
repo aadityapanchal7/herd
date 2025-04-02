@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Event } from '@/types';
+import { Event, EventCategory } from '@/types';
 import Navbar from '@/components/Navbar';
 import ChatRoom from '@/components/ChatRoom';
 import { ArrowLeft, Users } from 'lucide-react';
@@ -36,14 +36,14 @@ const Chat: React.FC = () => {
           title: data.title,
           description: data.description,
           date: data.date,
-          time: data.time || '',
+          time: '', // This field might not exist in the DB, defaulting to empty string
           location: {
             name: data.location_name,
             address: data.address,
             coordinates: [data.longitude, data.latitude],
           },
           location_name: data.location_name,
-          category: data.category,
+          category: data.category as EventCategory, // Cast to EventCategory
           attendees: data.attendees,
           capacity: data.capacity,
           host: {

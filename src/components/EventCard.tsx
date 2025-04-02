@@ -11,9 +11,10 @@ import RSVPDialog from './RSVPDialog';
 
 interface EventCardProps {
   event: Event;
+  onRSVP?: (eventId: string) => void;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, onRSVP }) => {
   const [showRSVPDialog, setShowRSVPDialog] = React.useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -38,7 +39,11 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       navigate('/auth');
       return;
     }
-    setShowRSVPDialog(true);
+    if (onRSVP) {
+      onRSVP(event.id);
+    } else {
+      setShowRSVPDialog(true);
+    }
   };
   
   const closeRSVPDialog = () => {
@@ -107,11 +112,13 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         </CardFooter>
       </Card>
       
-      <RSVPDialog
-        event={event}
-        isOpen={showRSVPDialog}
-        onClose={closeRSVPDialog}
-      />
+      {!onRSVP && (
+        <RSVPDialog
+          event={event}
+          isOpen={showRSVPDialog}
+          onClose={closeRSVPDialog}
+        />
+      )}
     </>
   );
 };

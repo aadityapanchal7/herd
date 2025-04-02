@@ -10,7 +10,7 @@ import { useParams } from 'react-router-dom';
 
 interface Message {
   id: string;
-  content: string;
+  message: string;
   user_id: string;
   username: string;
   created_at: string;
@@ -30,9 +30,9 @@ const ChatRoom: React.FC = () => {
     
     // Set up real-time subscription
     const channel = supabase
-      .channel('public:chat_messages')
+      .channel('public:event_chat_messages')
       .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `event_id=eq.${eventId}` }, 
+        { event: 'INSERT', schema: 'public', table: 'event_chat_messages', filter: `event_id=eq.${eventId}` }, 
         (payload) => {
           const newMsg = payload.new as any;
           // Add user info to message
@@ -55,10 +55,10 @@ const ChatRoom: React.FC = () => {
   const fetchMessages = async () => {
     try {
       const { data, error } = await supabase
-        .from('chat_messages')
+        .from('event_chat_messages')
         .select(`
           id,
-          content,
+          message,
           user_id,
           created_at,
           profiles:user_id (username, full_name)
@@ -70,7 +70,7 @@ const ChatRoom: React.FC = () => {
       
       const formattedMessages = data.map(msg => ({
         id: msg.id,
-        content: msg.content,
+        message: msg.message,
         user_id: msg.user_id,
         username: msg.profiles?.username || msg.profiles?.full_name || 'Anonymous',
         created_at: msg.created_at
@@ -96,7 +96,7 @@ const ChatRoom: React.FC = () => {
       
       setMessages(prev => [...prev, {
         id: message.id,
-        content: message.content,
+        message: message.message,
         user_id: message.user_id,
         username: data?.username || data?.full_name || 'Anonymous',
         created_at: message.created_at
@@ -113,11 +113,11 @@ const ChatRoom: React.FC = () => {
     
     try {
       const { error } = await supabase
-        .from('chat_messages')
+        .from('event_chat_messages')
         .insert({
           event_id: eventId,
           user_id: user.id,
-          content: newMessage
+          message: newMessage
         });
         
       if (error) throw error;
@@ -147,7 +147,7 @@ const ChatRoom: React.FC = () => {
           messages.map(message => (
             <ChatMessage 
               key={message.id}
-              message={message.content}
+              message={message.message}
               username={message.username}
               timestamp={message.created_at}
               isMine={message.user_id === user?.id}
