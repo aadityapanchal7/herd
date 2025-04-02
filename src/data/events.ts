@@ -13,6 +13,7 @@ export const events: Event[] = [
       address: 'University Main Quad',
       coordinates: [-122.1697, 37.4275], // Stanford University coordinates
     },
+    location_name: 'The Quad',
     category: 'social',
     attendees: 45,
     capacity: 100,
@@ -21,6 +22,7 @@ export const events: Event[] = [
       verified: true,
     },
     image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
+    image_url: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
   },
   {
     id: '2',
@@ -33,6 +35,7 @@ export const events: Event[] = [
       address: 'University Library, Room 202',
       coordinates: [-122.1689, 37.4268], // Nearby Stanford Library
     },
+    location_name: 'Main Library',
     category: 'academic',
     attendees: 12,
     capacity: 20,
@@ -41,6 +44,7 @@ export const events: Event[] = [
       verified: true,
     },
     image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
+    image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
   },
   {
     id: '3',
@@ -53,6 +57,7 @@ export const events: Event[] = [
       address: 'University Rec Center, Court 3',
       coordinates: [-122.1710, 37.4290], // Recreation center nearby
     },
+    location_name: 'Recreation Center',
     category: 'sports',
     attendees: 32,
     capacity: 50,
@@ -61,6 +66,7 @@ export const events: Event[] = [
       verified: true,
     },
     image: 'https://images.unsplash.com/photo-1519861531473-9200262188bf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1742&q=80',
+    image_url: 'https://images.unsplash.com/photo-1519861531473-9200262188bf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1742&q=80',
   },
   {
     id: '4',
@@ -73,6 +79,7 @@ export const events: Event[] = [
       address: 'Fine Arts Building, Gallery 1',
       coordinates: [-122.1677, 37.4260], // Art building
     },
+    location_name: 'Art Building',
     category: 'arts',
     attendees: 18,
     capacity: 75,
@@ -81,6 +88,7 @@ export const events: Event[] = [
       verified: true,
     },
     image: 'https://images.unsplash.com/photo-1516570611566-4217d79a2c74?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
+    image_url: 'https://images.unsplash.com/photo-1516570611566-4217d79a2c74?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
   },
   {
     id: '5',
@@ -93,6 +101,7 @@ export const events: Event[] = [
       address: 'Engineering Center, Floor 1',
       coordinates: [-122.1730, 37.4280], // Engineering building
     },
+    location_name: 'Engineering Building',
     category: 'academic',
     attendees: 85,
     capacity: 150,
@@ -101,6 +110,7 @@ export const events: Event[] = [
       verified: true,
     },
     image: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1712&q=80',
+    image_url: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1712&q=80',
   },
   {
     id: '6',
@@ -113,6 +123,7 @@ export const events: Event[] = [
       address: 'Student Union, Auditorium',
       coordinates: [-122.1700, 37.4265], // Student union
     },
+    location_name: 'Student Union',
     category: 'social',
     attendees: 28,
     capacity: 75,
@@ -121,5 +132,6 @@ export const events: Event[] = [
       verified: false,
     },
     image: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1625&q=80',
+    image_url: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1625&q=80',
   },
 ];

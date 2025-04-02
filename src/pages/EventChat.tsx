@@ -49,7 +49,8 @@ const EventChat = () => {
         
         setEvent(eventData);
         
-        // Get chat messages
+        // Manually specify types for the query to work around TypeScript errors
+        // This is a temporary fix until types are properly generated
         const { data: messagesData, error: messagesError } = await supabase
           .from('event_chat_messages')
           .select(`
@@ -61,10 +62,10 @@ const EventChat = () => {
             profile:profiles(username, full_name, avatar_url)
           `)
           .eq('event_id', eventId)
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: true }) as any;
         
         if (messagesError) throw messagesError;
-        setMessages(messagesData as ChatMessage[] || []);
+        setMessages(messagesData || []);
         
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -87,6 +88,7 @@ const EventChat = () => {
       }, (payload) => {
         // Fetch the complete message with profile info
         const fetchNewMessage = async () => {
+          // Use type assertion to work around TypeScript errors
           const { data, error } = await supabase
             .from('event_chat_messages')
             .select(`
@@ -98,14 +100,14 @@ const EventChat = () => {
               profile:profiles(username, full_name, avatar_url)
             `)
             .eq('id', payload.new.id)
-            .single();
+            .single() as any;
           
           if (error) {
             console.error('Error fetching new message:', error);
             return;
           }
           
-          setMessages(prev => [...prev, data as ChatMessage]);
+          setMessages(prev => [...prev, data]);
         };
         
         fetchNewMessage();
@@ -127,13 +129,14 @@ const EventChat = () => {
     if (!newMessage.trim() || !user || !eventId) return;
     
     try {
+      // Use type assertion to work around TypeScript errors
       const { error } = await supabase
         .from('event_chat_messages')
         .insert({
           user_id: user.id,
           event_id: eventId,
           message: newMessage.trim()
-        });
+        }) as any;
       
       if (error) throw error;
       setNewMessage('');
