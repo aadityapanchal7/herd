@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,10 +49,10 @@ const eventSchema = z.object({
   location_name: z.string().min(1, "Location name is required"),
   address: z.string().min(1, "Address is required"),
   category: z.enum(["social", "academic", "sports", "arts", "other"] as const),
-  capacity: z.string().transform(Number).refine((n) => n > 0, "Capacity must be greater than 0"),
+  capacity: z.string().transform((value) => parseInt(value, 10)),
   image_url: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-  latitude: z.string().transform(Number).optional(),
-  longitude: z.string().transform(Number).optional(),
+  latitude: z.string().transform((value) => parseFloat(value)),
+  longitude: z.string().transform((value) => parseFloat(value)),
 });
 
 type EventFormValues = z.infer<typeof eventSchema>;
@@ -90,12 +89,23 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = ({ isOpen, onClose }
     
     try {
       setIsSubmitting(true);
-      
+
       const eventData = {
-        ...data,
+        title: data.title,
+        description: data.description,
+        short_description: data.short_description,
+        date: data.date,
+        time: data.time,
+        location_name: data.location_name,
+        address: data.address,
+        category: data.category,
+        capacity: data.capacity,
+        image_url: data.image_url || null,
+        latitude: data.latitude,
+        longitude: data.longitude,
         host_name: user.email?.split('@')[0] || 'Anonymous Host',
         host_verified: true,
-        attendees: 0,
+        attendees: 0
       };
       
       const { data: newEvent, error } = await supabase

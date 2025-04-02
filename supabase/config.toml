@@ -93,10 +93,6 @@ enable_signup = true
 # If enabled, users need to confirm their phone number before signing in.
 enable_confirmations = false
 
-[auth.anonymous]
-# Allow/disallow anonymous users to sign up
-enable_signup = true
-
 [analytics]
 enabled = false
 port = 54327
