@@ -31,6 +31,9 @@ const RSVPDialog: React.FC<RSVPDialogProps> = ({ event, isOpen, onClose }) => {
     try {
       setIsSubmitting(true);
       
+      console.log("Attempting to RSVP with event ID:", event.id);
+      console.log("User ID:", user.id);
+      
       // Insert into RSVP table
       const { error: rsvpError } = await supabase
         .from('rsvps')
@@ -41,7 +44,10 @@ const RSVPDialog: React.FC<RSVPDialogProps> = ({ event, isOpen, onClose }) => {
           email: user.email || '',
         });
         
-      if (rsvpError) throw rsvpError;
+      if (rsvpError) {
+        console.error("RSVP insert error:", rsvpError);
+        throw rsvpError;
+      }
       
       // Update event attendee count
       const { error: updateError } = await supabase
@@ -49,7 +55,10 @@ const RSVPDialog: React.FC<RSVPDialogProps> = ({ event, isOpen, onClose }) => {
         .update({ attendees: event.attendees + 1 })
         .eq('id', event.id);
         
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Event update error:", updateError);
+        throw updateError;
+      }
       
       // Send confirmation email
       if (user.email) {
