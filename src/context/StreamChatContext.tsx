@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { StreamChat, Channel as StreamChannel, ChannelFilters } from 'stream-chat';
+import { StreamChat, Channel as StreamChannel } from 'stream-chat';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 

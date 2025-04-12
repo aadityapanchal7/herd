@@ -123,9 +123,8 @@ const StreamChatRoom: React.FC<{ eventName: string }> = ({ eventName }) => {
     return () => {
       // Clean up channel listeners when component unmounts
       if (channel) {
-        channel.off('message.new');
-        channel.off('message.updated');
-        channel.off('message.deleted');
+        // Use proper typing for event unsubscribing
+        channel.off();
       }
     };
   }, [eventId, user, clientLoading, createChannel, getChannel, eventName]);
