@@ -60,23 +60,26 @@ const RSVPDialog: React.FC<RSVPDialogProps> = ({ event, isOpen, onClose }) => {
         throw updateError;
       }
       
-      // Send confirmation email
+      // Send confirmation email only if user has an email
       if (user.email) {
         try {
+          const eventDateStr = typeof event.date === 'string' ? event.date : new Date(event.date).toISOString();
+          
           // Send a verification email for RSVP
           const response = await supabase.functions.invoke('send-rsvp-verification', {
             body: {
               email: user.email,
               name: user.email?.split('@')[0] || '',
               eventTitle: event.title,
-              eventDate: event.date,
+              eventDate: eventDateStr,
               eventLocation: event.location_name
             }
           });
           
           if (response.error) {
             console.error('Error sending verification email:', response.error);
-            toast.error('Could not send verification email', {
+            // Don't throw error here, just show a toast notification
+            toast.warning('Could not send verification email', {
               description: 'Your RSVP was recorded, but we could not send the verification email.'
             });
           } else {
@@ -86,7 +89,8 @@ const RSVPDialog: React.FC<RSVPDialogProps> = ({ event, isOpen, onClose }) => {
           }
         } catch (emailError) {
           console.error('Error sending email:', emailError);
-          toast.error('Could not send verification email', {
+          // Don't throw error here either
+          toast.warning('Could not send verification email', {
             description: 'Your RSVP was recorded, but we could not send the verification email.'
           });
         }

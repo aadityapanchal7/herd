@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import EventChat from "./pages/EventChat";
 import Chat from "./pages/Chat";
 import { AuthProvider } from "./context/AuthContext";
+import { StreamChatProvider } from "./context/StreamChatContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -21,27 +22,29 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route 
-              path="/event/:eventId/chat" 
-              element={
-                <ProtectedRoute requireEmailConfirmation={true}>
-                  <EventChat />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/chat/:eventId" 
-              element={
-                <ProtectedRoute requireEmailConfirmation={true}>
-                  <Chat />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <StreamChatProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route 
+                path="/event/:eventId/chat" 
+                element={
+                  <ProtectedRoute requireEmailConfirmation={true}>
+                    <EventChat />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/chat/:eventId" 
+                element={
+                  <ProtectedRoute requireEmailConfirmation={true}>
+                    <Chat />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </StreamChatProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

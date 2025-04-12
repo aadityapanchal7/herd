@@ -1,0 +1,121 @@
+
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { StreamChat, Channel as StreamChannel, ChannelFilters } from 'stream-chat';
+import { useAuth } from './AuthContext';
+import { toast } from 'sonner';
+
+// You'll need to replace these with your actual Stream API key
+const STREAM_API_KEY = 'your_stream_api_key'; 
+
+type StreamChatContextType = {
+  client: StreamChat | null;
+  createChannel: (channelId: string, name: string) => Promise<StreamChannel | null>;
+  getChannel: (channelId: string) => Promise<StreamChannel | null>;
+  isLoading: boolean;
+};
+
+const StreamChatContext = createContext<StreamChatContextType | undefined>(undefined);
+
+export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [client, setClient] = useState<StreamChat | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { user, userProfile } = useAuth();
+
+  useEffect(() => {
+    // Initialize the Stream Chat client
+    const initChat = async () => {
+      if (!user) {
+        setClient(null);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        // Initialize Stream Chat client
+        const chatClient = StreamChat.getInstance(STREAM_API_KEY);
+        
+        // Check if we're already connected as this user
+        if (chatClient.userID !== user.id) {
+          // Connect the user
+          await chatClient.connectUser(
+            {
+              id: user.id,
+              name: userProfile?.full_name || userProfile?.username || user.email || 'Anonymous',
+              image: userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${userProfile?.username || 'User'}`,
+            },
+            // In production, you'd generate this token on your backend
+            chatClient.devToken(user.id)
+          );
+        }
+
+        setClient(chatClient);
+      } catch (error) {
+        console.error('Error connecting to Stream Chat:', error);
+        toast.error('Failed to connect to chat service');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initChat();
+
+    return () => {
+      // Clean up function
+      if (client) {
+        client.disconnectUser();
+      }
+    };
+  }, [user, userProfile]);
+
+  // Create a new channel or get an existing one
+  const createChannel = async (channelId: string, name: string): Promise<StreamChannel | null> => {
+    if (!client || !user) return null;
+
+    try {
+      // Initialize the channel
+      const channel = client.channel('messaging', `event-${channelId}`, {
+        name,
+        members: [user.id],
+        created_by_id: user.id,
+      });
+
+      // Query the channel to initialize it on the server side
+      await channel.create();
+      
+      return channel;
+    } catch (error) {
+      console.error('Error creating channel:', error);
+      toast.error('Failed to create chat room');
+      return null;
+    }
+  };
+
+  // Get an existing channel
+  const getChannel = async (channelId: string): Promise<StreamChannel | null> => {
+    if (!client) return null;
+
+    try {
+      const channel = client.channel('messaging', `event-${channelId}`);
+      await channel.watch();
+      return channel;
+    } catch (error) {
+      console.error('Error getting channel:', error);
+      return null;
+    }
+  };
+
+  return (
+    <StreamChatContext.Provider value={{ client, createChannel, getChannel, isLoading }}>
+      {children}
+    </StreamChatContext.Provider>
+  );
+};
+
+export const useStreamChat = () => {
+  const context = useContext(StreamChatContext);
+  if (context === undefined) {
+    throw new Error('useStreamChat must be used within a StreamChatProvider');
+  }
+  return context;
+};

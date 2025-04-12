@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Event, EventCategory } from '@/types';
 import Navbar from '@/components/Navbar';
-import ChatRoom from '@/components/ChatRoom';
+import StreamChatRoom from '@/components/StreamChatRoom';
 import { ArrowLeft, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -128,7 +128,7 @@ const Chat: React.FC = () => {
             </div>
           </div>
           <div className="flex-1 overflow-hidden">
-            <ChatRoom />
+            <StreamChatRoom eventName={event.title} />
           </div>
         </div>
       </div>
