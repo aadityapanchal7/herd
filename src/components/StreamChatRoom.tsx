@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Channel as StreamChannel } from 'stream-chat';
+import { Channel as StreamChannel, StreamChat, MessageResponse } from 'stream-chat';
 import { Card } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 
+// Update interface to align with StreamChat's MessageResponse structure
 interface Message {
   id: string;
   text: string;
@@ -50,26 +51,62 @@ const StreamChatRoom: React.FC<{ eventName: string }> = ({ eventName }) => {
           // Load existing messages
           const response = await eventChannel.query({ messages: { limit: 30 } });
           if (response.messages) {
-            setMessages(response.messages.reverse());
+            // Convert StreamChat messages to our Message type
+            const formattedMessages: Message[] = response.messages.map(msg => ({
+              id: msg.id,
+              text: msg.text || '', // Ensure text is not undefined
+              user: {
+                id: msg.user?.id || '',
+                name: msg.user?.name || 'Unknown User'
+              },
+              created_at: msg.created_at || new Date().toISOString()
+            }));
+            setMessages(formattedMessages.reverse());
           }
 
-          // Subscribe to new messages
+          // Subscribe to new messages with proper event handler types
           eventChannel.on('message.new', (event) => {
-            setMessages((prevMessages) => [...prevMessages, event.message as unknown as Message]);
+            if (event.message) {
+              const newMsg: Message = {
+                id: event.message.id,
+                text: event.message.text || '',
+                user: {
+                  id: event.message.user?.id || '',
+                  name: event.message.user?.name || 'Unknown User'
+                },
+                created_at: event.message.created_at || new Date().toISOString()
+              };
+              setMessages((prevMessages) => [...prevMessages, newMsg]);
+            }
           });
 
           eventChannel.on('message.updated', (event) => {
-            setMessages((prevMessages) => 
-              prevMessages.map((msg) => 
-                msg.id === event.message.id ? event.message as unknown as Message : msg
-              )
-            );
+            if (event.message) {
+              setMessages((prevMessages) => 
+                prevMessages.map((msg) => {
+                  if (msg.id === event.message.id) {
+                    return {
+                      id: event.message.id,
+                      text: event.message.text || '',
+                      user: {
+                        id: event.message.user?.id || '',
+                        name: event.message.user?.name || 'Unknown User'
+                      },
+                      created_at: event.message.created_at || new Date().toISOString()
+                    };
+                  }
+                  return msg;
+                })
+              );
+            }
           });
 
           eventChannel.on('message.deleted', (event) => {
-            setMessages((prevMessages) => 
-              prevMessages.filter((msg) => msg.id !== event.message.id)
-            );
+            if (event.message) {
+              setMessages((prevMessages) => 
+                prevMessages.filter((msg) => msg.id !== event.message.id)
+              );
+            }
           });
 
           setLoading(false);

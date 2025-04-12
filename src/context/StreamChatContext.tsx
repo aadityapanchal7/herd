@@ -4,8 +4,9 @@ import { StreamChat, Channel as StreamChannel, ChannelFilters } from 'stream-cha
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
-// You'll need to replace these with your actual Stream API key
-const STREAM_API_KEY = 'your_stream_api_key'; 
+// Replace this placeholder with your actual Stream API key
+// Normally this would be in an environment variable
+const STREAM_API_KEY = '5x994h86b8xm'; // This is a public key, safe to include in code
 
 type StreamChatContextType = {
   client: StreamChat | null;
@@ -42,7 +43,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             {
               id: user.id,
               name: userProfile?.full_name || userProfile?.username || user.email || 'Anonymous',
-              image: userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${userProfile?.username || 'User'}`,
+              image: userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.username || user.email || 'User')}`,
             },
             // In production, you'd generate this token on your backend
             chatClient.devToken(user.id)
@@ -61,9 +62,9 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     initChat();
 
     return () => {
-      // Clean up function
+      // Clean up function - disconnect when component unmounts
       if (client) {
-        client.disconnectUser();
+        client.disconnectUser().catch(console.error);
       }
     };
   }, [user, userProfile]);
