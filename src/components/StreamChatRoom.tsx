@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Channel as StreamChannel, StreamChat, MessageResponse } from 'stream-chat';
 import { Card } from '@/components/ui/card';
@@ -11,7 +10,6 @@ import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 
-// Update interface to align with StreamChat's MessageResponse structure
 interface Message {
   id: string;
   text: string;
@@ -37,10 +35,8 @@ const StreamChatRoom: React.FC<{ eventName: string }> = ({ eventName }) => {
       if (!eventId || !user || clientLoading) return;
 
       try {
-        // First try to get an existing channel for this event
         let eventChannel = await getChannel(eventId);
         
-        // If the channel doesn't exist, create it
         if (!eventChannel) {
           eventChannel = await createChannel(eventId, eventName || `Event Chat ${eventId}`);
         }
@@ -48,13 +44,11 @@ const StreamChatRoom: React.FC<{ eventName: string }> = ({ eventName }) => {
         if (eventChannel) {
           setChannel(eventChannel);
           
-          // Load existing messages
           const response = await eventChannel.query({ messages: { limit: 30 } });
           if (response.messages) {
-            // Convert StreamChat messages to our Message type
             const formattedMessages: Message[] = response.messages.map(msg => ({
               id: msg.id,
-              text: msg.text || '', // Ensure text is not undefined
+              text: msg.text || '',
               user: {
                 id: msg.user?.id || '',
                 name: msg.user?.name || 'Unknown User'
@@ -64,7 +58,6 @@ const StreamChatRoom: React.FC<{ eventName: string }> = ({ eventName }) => {
             setMessages(formattedMessages.reverse());
           }
 
-          // Subscribe to new messages with proper event handler types
           eventChannel.on('message.new', (event) => {
             if (event.message) {
               const newMsg: Message = {
@@ -121,10 +114,10 @@ const StreamChatRoom: React.FC<{ eventName: string }> = ({ eventName }) => {
     initializeChannel();
 
     return () => {
-      // Clean up channel listeners when component unmounts
       if (channel) {
-        // Use proper typing for event unsubscribing
-        channel.off();
+        channel.off('message.new');
+        channel.off('message.updated');
+        channel.off('message.deleted');
       }
     };
   }, [eventId, user, clientLoading, createChannel, getChannel, eventName]);
@@ -146,13 +139,11 @@ const StreamChatRoom: React.FC<{ eventName: string }> = ({ eventName }) => {
     }
   };
 
-  // Format timestamp to readable time
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Get initials for avatar fallback
   const getInitials = (name: string) => {
     return name
       .split(' ')
