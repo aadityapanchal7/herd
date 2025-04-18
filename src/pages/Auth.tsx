@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { FaGoogle } from 'react-icons/fa';
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
@@ -16,6 +17,15 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [universities, setUniversities] = useState<{id: string, name: string}[]>([]);
   const [userCount, setUserCount] = useState<number>(0);
+
+  // Hardcoded universities data
+  const hardcodedUniversities = [
+    { id: "1", name: "UT Austin" },
+    { id: "2", name: "Georgia Tech" },
+    { id: "4", name: "Harvard" },
+    { id: "5", name: "Stanford" },
+    { id: "6", name: "Ole Miss" },
+  ];
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -36,15 +46,32 @@ const Auth = () => {
   // Fetch universities and user count on component mount
   useEffect(() => {
     const fetchUniversities = async () => {
-      const { data, error } = await supabase
-        .from('universities')
-        .select('id, name')
-        .order('name');
+      console.log('Fetching universities...');
       
-      if (error) {
-        console.error('Error fetching universities:', error);
-      } else {
-        setUniversities(data || []);
+      try {
+        // First try to fetch from the database
+        const { data, error } = await supabase
+          .from('universities')
+          .select('id, name')
+          .order('name');
+        
+        if (error) {
+          console.error('Error fetching universities:', error);
+          // If there's an error or no data, use the hardcoded data
+          console.log('Using hardcoded university data instead');
+          setUniversities(hardcodedUniversities);
+        } else if (data && data.length > 0) {
+          console.log('Universities fetched successfully:', data);
+          setUniversities(data);
+        } else {
+          // If there's no error but also no data, use the hardcoded data
+          console.log('No universities found in database, using hardcoded data');
+          setUniversities(hardcodedUniversities);
+        }
+      } catch (error) {
+        console.error('Exception when fetching universities:', error);
+        // In case of any exception, fall back to hardcoded data
+        setUniversities(hardcodedUniversities);
       }
     };
 
@@ -129,16 +156,37 @@ const Auth = () => {
 
     setIsLoading(true);
     try {
+      console.log('Starting signup process...');
       await signUp(signupEmail, signupPassword, {
         full_name: fullName,
         username: username,
         campus_id: campus,
       });
+      console.log('Signup completed successfully');
       setActiveTab('login');
     } catch (error: any) {
-      console.error('Signup error:', error);
+      console.error('Signup error details:', error);
+      if (error.message?.includes('network') || error.message?.includes('QUIC') || error.message?.includes('protocol')) {
+        setSignupError('Network error. Please check your internet connection and try again.');
+      } else {
+        setSignupError(error.message || 'An unexpected error occurred during signup');
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
     }
   };
 
@@ -161,123 +209,145 @@ const Auth = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs 
-            defaultValue={activeTab} 
-            onValueChange={(value) => setActiveTab(value as 'login' | 'signup')} 
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
+          <div className="flex flex-col gap-4">
+            <Button
+              onClick={handleGoogleSignIn}
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <FaGoogle className="w-4 h-4" />
+              Continue with Google
+            </Button>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
 
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Email"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                  />
-                </div>
-                {loginError && (
-                  <div className="text-red-500 text-sm">{loginError}</div>
-                )}
-                <Button 
-                  type="submit" 
-                  className="w-full bg-herd-purple hover:bg-herd-purple-dark"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Signing in...' : 'Sign In'}
-                </Button>
-              </form>
-            </TabsContent>
+            <Tabs 
+              defaultValue={activeTab} 
+              onValueChange={(value) => setActiveTab(value as 'login' | 'signup')} 
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="Email"
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Input
-                    id="full-name"
-                    type="text"
-                    placeholder="Full Name (optional)"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Username (optional)"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Select value={campus} onValueChange={setCampus}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your campus" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {universities.map((uni) => (
-                        <SelectItem key={uni.id} value={uni.id}>
-                          {uni.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="Password"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="Confirm Password"
-                    value={signupConfirmPassword}
-                    onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                  />
-                </div>
-                {signupError && (
-                  <div className="text-red-500 text-sm">{signupError}</div>
-                )}
-                <Button 
-                  type="submit" 
-                  className="w-full bg-herd-purple hover:bg-herd-purple-dark"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                    />
+                  </div>
+                  {loginError && (
+                    <div className="text-red-500 text-sm">{loginError}</div>
+                  )}
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-herd-purple hover:bg-herd-purple-dark"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Signing in...' : 'Sign In'}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup">
+                <form onSubmit={handleSignup} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="Email"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      id="full-name"
+                      type="text"
+                      placeholder="Full Name (optional)"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      id="username"
+                      type="text"
+                      placeholder="Username (optional)"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Select value={campus} onValueChange={setCampus}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your campus" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {universities.map((uni) => (
+                          <SelectItem key={uni.id} value={uni.id}>
+                            {uni.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="Password"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="Confirm Password"
+                      value={signupConfirmPassword}
+                      onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                    />
+                  </div>
+                  {signupError && (
+                    <div className="text-red-500 text-sm">{signupError}</div>
+                  )}
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-herd-purple hover:bg-herd-purple-dark"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Creating Account...' : 'Create Account'}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </div>
         </CardContent>
         <CardFooter>
           <p className="text-center text-sm text-gray-500 mt-2 w-full">

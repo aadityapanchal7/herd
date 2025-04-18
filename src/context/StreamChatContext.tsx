@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { StreamChat, Channel as StreamChannel } from 'stream-chat';
 import { useAuth } from './AuthContext';
@@ -20,7 +19,19 @@ const StreamChatContext = createContext<StreamChatContextType | undefined>(undef
 export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [client, setClient] = useState<StreamChat | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { user, userProfile } = useAuth();
+  const [hasShownError, setHasShownError] = useState<boolean>(false);
+  
+  // Safely try to get auth context
+  const auth = (() => {
+    try {
+      return useAuth();
+    } catch (error) {
+      console.warn('Auth context not available:', error);
+      return { user: null, userProfile: null };
+    }
+  })();
+  
+  const { user, userProfile } = auth;
 
   useEffect(() => {
     // Initialize the Stream Chat client
@@ -51,9 +62,23 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }
 
         setClient(chatClient);
+        // Reset error state when successfully connected
+        setHasShownError(false);
       } catch (error) {
         console.error('Error connecting to Stream Chat:', error);
-        toast.error('Failed to connect to chat service');
+        
+        // Only show error toast if:
+        // 1. We're not on the auth or home page (user is trying to access chat)
+        // 2. We haven't shown an error already in this session
+        const isAuthOrHomePage = 
+          window.location.pathname === '/' ||
+          window.location.pathname === '/auth' ||
+          window.location.pathname.includes('/auth/callback');
+        
+        if (!isAuthOrHomePage && !hasShownError) {
+          toast.error('Failed to connect to chat service');
+          setHasShownError(true);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -67,7 +92,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         client.disconnectUser().catch(console.error);
       }
     };
-  }, [user, userProfile]);
+  }, [user, userProfile, hasShownError]);
 
   // Create a new channel or get an existing one
   const createChannel = async (channelId: string, name: string): Promise<StreamChannel | null> => {
